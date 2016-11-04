@@ -17,7 +17,6 @@
 #define MBED_TIMER_H
 
 #include "platform.h"
-#include "ticker_api.h"
 
 namespace mbed {
 
@@ -46,7 +45,6 @@ class Timer {
 
 public:
     Timer();
-    Timer(const ticker_data_t *data);
 
     /** Start the timer
      */
@@ -83,7 +81,6 @@ protected:
     int _running;          // whether the timer is running
     unsigned int _start;   // the start time of the latest slice
     int _time;             // any accumulated time from previous slices
-    const ticker_data_t *_ticker_data;
 };
 
 } // namespace mbed
