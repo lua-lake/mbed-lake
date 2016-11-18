@@ -1,10 +1,12 @@
-local app = 'peachy'
+-- fixme get 'build' out of here
+local app = 'build/peachy'
 local build_dir = 'build'
 
 local source_patterns = { '%.c$', '%.cpp$', '%.s$' }
 local source_directories = { 'src' }
 local include_directories = {
   'src',
+  'mbed',
   'mbed/TARGET_LPC1768',
   'mbed/TARGET_LPC1768/TARGET_NXP',
   'mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X',
@@ -67,13 +69,15 @@ libraries = map(libraries, add_prefix('-l'))
 
 target('all', { app .. '.bin', app .. '.hex', 'size' })
 
+target('clean', {}, function()
+  fs.rmrf('build')
+end)
+
 target('lst', app .. '.lst')
 
 target('size', app .. '.elf', function(args)
-  vexec(size .. args.deps[1])
+  vexec(size .. ' ' .. args.deps[1])
 end)
-
-print(table.concat({ linker_script, table.unpack(objects) }, ','))
 
 rule(app .. '.elf', { linker_script, table.unpack(objects) }, function(args)
 	vexec(ld .. ' ' .. flags.ld .. ' ' .. ' -T' .. linker_script .. ' ' .. table.concat(library_directories, ' ') .. ' -o ' .. args.target .. ' ' .. table.concat(objects, ' ') .. ' -Wl,--start-group ' .. table.concat(libraries, ' ') .. ' -Wl,--end-group')
@@ -93,7 +97,7 @@ end)
 
 rule(build_dir .. '/*.o', { '*.cpp' }, function(args)
   fs.mkdirp(path.dirname(args.target))
-  -- vexec(cpp .. ' ' .. flags.cppc .. ' ' .. symbols.cc .. ' ' .. table.concat(includes.cppc, ' ') .. ' -o ' .. args.target .. ' ' .. args.deps[1])
+  vexec(cpp .. ' ' .. flags.cppc .. ' ' .. symbols.cc .. ' ' .. table.concat(includes.cppc, ' ') .. ' -o ' .. args.target .. ' ' .. args.deps[1])
 end)
 
 map(deps, load_dependency_file)
