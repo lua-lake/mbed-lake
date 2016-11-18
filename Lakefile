@@ -1,0 +1,99 @@
+local app = 'peachy'
+local build_dir = 'build'
+
+local source_patterns = { '%.c$', '%.cpp$', '%.s$' }
+local source_directories = { 'src' }
+local include_directories = {
+  'src',
+  'mbed/TARGET_LPC1768',
+  'mbed/TARGET_LPC1768/TARGET_NXP',
+  'mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X',
+  'mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768',
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM'
+}
+local library_directories = {
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM'
+}
+local libraries = {
+  'mbed',
+  'stdc++',
+  'm',
+  'c',
+  'gcc',
+  'nosys'
+}
+local linker_script = 'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/LPC1768.ld'
+local sys_objects = {
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o',
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o',
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o',
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o',
+  'mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o'
+}
+
+local cc = 'arm-none-eabi-gcc'
+local as = 'arm-none-eabi-as'
+local cpp = 'arm-none-eabi-g++'
+local ld = 'arm-none-eabi-gcc'
+local objcopy = 'arm-none-eabi-objcopy'
+local objdump = 'arm-none-eabi-objdump'
+local size = 'arm-none-eabi-size'
+
+local flags = {
+  cppc = [[-c -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fmessage-length=0 -fno-exceptions -fno-builtin -ffunction-sections -fdata-sections -funsigned-char -MMD -fno-delete-null-pointer-checks -fomit-frame-pointer -mcpu=cortex-m3 -mthumb -Os -std=gnu++98 -fno-rtti -Wvla -DDEVICE_ERROR_PATTERN=1 -D__MBED__=1 -DDEVICE_I2CSLAVE=1 -DTARGET_LIKE_MBED -DTARGET_NXP -DTARGET_LPC176X -DDEVICE_PORTIN=1 -DDEVICE_RTC=1 -DTOOLCHAIN_object -D__CMSIS_RTOS -DMBED_BUILD_TIMESTAMP=1479424793.17 -DTOOLCHAIN_GCC -DDEVICE_CAN=1 -DTARGET_LIKE_CORTEX_M3 -DTARGET_CORTEX_M -DARM_MATH_CM3 -DDEVICE_ANALOGOUT=1 -DTARGET_UVISOR_UNSUPPORTED -DTARGET_M3 -DDEVICE_PWMOUT=1 -DDEVICE_INTERRUPTIN=1 -DDEVICE_I2C=1 -DDEVICE_PORTOUT=1 -D__CORTEX_M3 -DDEVICE_STDIO_MESSAGES=1 -DTARGET_LPC1768 -DTARGET_RELEASE -DDEVICE_PORTINOUT=1 -DDEVICE_SERIAL_FC=1 -DTARGET_MBED_LPC1768 -D__MBED_CMSIS_RTOS_CM -DDEVICE_SLEEP=1 -DTOOLCHAIN_GCC_ARM -DDEVICE_SPI=1 -DDEVICE_ETHERNET=1 -DDEVICE_SPISLAVE=1 -DDEVICE_ANALOGIN=1 -DDEVICE_SERIAL=1 -DDEVICE_SEMIHOST=1 -DDEVICE_DEBUG_AWARENESS=1 -DDEVICE_LOCALFILESYSTEM=1 -include mbed_config.h -MMD -MP]],
+  ld = [[-Wl,--gc-sections -Wl,--wrap,main -mcpu=cortex-m3 -mthumb]]
+}
+
+local symbols = {
+  cc = [[-DDEVICE_ERROR_PATTERN=1 -D__MBED__=1 -DDEVICE_I2CSLAVE=1 -DTARGET_LIKE_MBED -DTARGET_NXP -DTARGET_LPC176X -DDEVICE_PORTIN=1 -DDEVICE_RTC=1 -DTOOLCHAIN_object -D__CMSIS_RTOS -DMBED_BUILD_TIMESTAMP=1479424793.17 -DTOOLCHAIN_GCC -DDEVICE_CAN=1 -DTARGET_LIKE_CORTEX_M3 -DTARGET_CORTEX_M -DARM_MATH_CM3 -DDEVICE_ANALOGOUT=1 -DTARGET_UVISOR_UNSUPPORTED -DTARGET_M3 -DDEVICE_PWMOUT=1 -DDEVICE_INTERRUPTIN=1 -DDEVICE_I2C=1 -DDEVICE_PORTOUT=1 -D__CORTEX_M3 -DDEVICE_STDIO_MESSAGES=1 -DTARGET_LPC1768 -DTARGET_RELEASE -DDEVICE_PORTINOUT=1 -DDEVICE_SERIAL_FC=1 -DTARGET_MBED_LPC1768 -D__MBED_CMSIS_RTOS_CM -DDEVICE_SLEEP=1 -DTOOLCHAIN_GCC_ARM -DDEVICE_SPI=1 -DDEVICE_ETHERNET=1 -DDEVICE_SPISLAVE=1 -DDEVICE_ANALOGIN=1 -DDEVICE_SERIAL=1 -DDEVICE_SEMIHOST=1 -DDEVICE_DEBUG_AWARENESS=1 -DDEVICE_LOCALFILESYSTEM=1]]
+}
+
+local includes = {
+  cppc = map(include_directories, add_prefix('-I')),
+}
+
+local library_directories = map(library_directories, add_prefix('-L'))
+
+local sources = flat_map(source_directories, function(directory)
+  return files_from_directory(directory, { recursive = true, match = source_patterns })
+end)
+
+local objects = map(sources, set_extension('o'))
+objects = map(objects, add_prefix(build_dir .. '/'))
+local deps = map(objects, set_extension('d'))
+append(objects, sys_objects)
+
+libraries = map(libraries, add_prefix('-l'))
+
+target('all', { app .. '.bin', app .. '.hex', 'size' })
+
+target('lst', app .. '.lst')
+
+target('size', app .. '.elf', function(args)
+  vexec(size .. args.deps[1])
+end)
+
+print(table.concat({ linker_script, table.unpack(objects) }, ','))
+
+rule(app .. '.elf', { linker_script, table.unpack(objects) }, function(args)
+	vexec(ld .. ' ' .. flags.ld .. ' ' .. ' -T' .. linker_script .. ' ' .. table.concat(library_directories, ' ') .. ' -o ' .. args.target .. ' ' .. table.concat(objects, ' ') .. ' -Wl,--start-group ' .. table.concat(libraries, ' ') .. ' -Wl,--end-group')
+end)
+
+rule(app .. '.bin', app .. '.elf', function(args)
+	vexec(objcopy .. ' -O binary ' .. args.deps[1] .. ' ' .. args.target)
+end)
+
+rule(app .. '.hex', app .. '.elf', function(args)
+	vexec(objcopy .. ' -O ihex ' .. args.deps[1] .. ' ' .. args.target)
+end)
+
+rule(app .. '.lst', app .. '.elf', function(args)
+	vexec(objdump .. ' -Sdh ' .. args.deps[1] .. ' > ' .. args.target)
+end)
+
+rule(build_dir .. '/*.o', { '*.cpp' }, function(args)
+  fs.mkdirp(path.dirname(args.target))
+  -- vexec(cpp .. ' ' .. flags.cppc .. ' ' .. symbols.cc .. ' ' .. table.concat(includes.cppc, ' ') .. ' -o ' .. args.target .. ' ' .. args.deps[1])
+end)
+
+map(deps, load_dependency_file)
