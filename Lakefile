@@ -86,6 +86,7 @@ target('size', elf, function(args)
 end)
 
 rule(elf, { linker_script, table.unpack(objects) }, function(args)
+  print('Linking ' .. args.target .. '...')
 	exec(ld .. ' ' .. flags.ld .. ' ' .. ' -T' .. linker_script .. ' ' .. table.concat(library_directories, ' ') .. ' -o ' .. args.target .. ' ' .. table.concat(objects, ' ') .. ' -Wl,--start-group ' .. table.concat(libraries, ' ') .. ' -Wl,--end-group')
 end)
 
@@ -102,6 +103,7 @@ rule(lst, elf, function(args)
 end)
 
 rule(build_dir .. '/*.o', { '*.cpp' }, function(args)
+  print('Compiling ' .. args.deps[1] .. '...')
   fs.mkdirp(path.dirname(args.target))
   exec(cpp .. ' ' .. flags.cppc .. ' ' .. symbols.cc .. ' ' .. table.concat(includes.cppc, ' ') .. ' -o ' .. args.target .. ' ' .. args.deps[1])
 end)
