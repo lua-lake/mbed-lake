@@ -1,2 +1,2 @@
-# peach-lake
-GR-Peach lake build system
+# mbed-lake
+MBED lake build system

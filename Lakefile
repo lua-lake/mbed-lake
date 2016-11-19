@@ -1,6 +1,6 @@
 exec = config.verbose == 'true' and vexec or exec
 
-local app = 'peachy'
+local app = 'mbed'
 local build_dir = 'build'
 
 local source_patterns = { '%.c$', '%.cpp$', '%.s$' }
