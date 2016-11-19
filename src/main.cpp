@@ -1,5 +1,6 @@
 #include "mbed.h"
 #include "derp.h"
+#include "foo.h"
 
 DigitalOut myled(LED1);
 
