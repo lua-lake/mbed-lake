@@ -87,19 +87,19 @@ end)
 
 rule(elf, { linker_script, table.unpack(objects) }, function(args)
   print('Linking ' .. args.target .. '...')
-	exec(ld .. ' ' .. flags.ld .. ' ' .. ' -T' .. linker_script .. ' ' .. table.concat(library_directories, ' ') .. ' -o ' .. args.target .. ' ' .. table.concat(objects, ' ') .. ' -Wl,--start-group ' .. table.concat(libraries, ' ') .. ' -Wl,--end-group')
+  exec(ld .. ' ' .. flags.ld .. ' ' .. ' -T' .. linker_script .. ' ' .. table.concat(library_directories, ' ') .. ' -o ' .. args.target .. ' ' .. table.concat(objects, ' ') .. ' -Wl,--start-group ' .. table.concat(libraries, ' ') .. ' -Wl,--end-group')
 end)
 
 rule(bin, elf, function(args)
-	exec(objcopy .. ' -O binary ' .. args.deps[1] .. ' ' .. args.target)
+  exec(objcopy .. ' -O binary ' .. args.deps[1] .. ' ' .. args.target)
 end)
 
 rule(hex, elf, function(args)
-	exec(objcopy .. ' -O ihex ' .. args.deps[1] .. ' ' .. args.target)
+  exec(objcopy .. ' -O ihex ' .. args.deps[1] .. ' ' .. args.target)
 end)
 
 rule(lst, elf, function(args)
-	exec(objdump .. ' -Sdh ' .. args.deps[1] .. ' > ' .. args.target)
+  exec(objdump .. ' -Sdh ' .. args.deps[1] .. ' > ' .. args.target)
 end)
 
 rule(build_dir .. '/*.o', { '*.cpp' }, function(args)
